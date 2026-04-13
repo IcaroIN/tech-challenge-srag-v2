@@ -13,10 +13,12 @@ Todos os modelos são treinados com class_weight='balanced' ou equivalente
 para lidar com possível desbalanceamento entre Cura e Óbito.
 """
 
+import os
 import joblib
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from sklearn.base import clone
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -29,6 +31,11 @@ MODELS_DIR = Path(__file__).resolve().parents[1] / "results" / "models"
 
 # Semente global para reprodutibilidade
 RANDOM_STATE = 42
+
+# GridSearchCV paralelo + RF/XGB com n_jobs=-1 = paralelismo aninhado que estoura RAM
+# e derruba workers (joblib/loky) em máquinas com pouca memória. Use 1 por padrão;
+# export SRAG_GRID_N_JOBS=4 para acelerar em máquinas com RAM suficiente (e reduza n_jobs do RF).
+GRID_N_JOBS = int(os.environ.get("SRAG_GRID_N_JOBS", "1"))
 
 
 def definir_modelos() -> dict:
@@ -119,6 +126,10 @@ def treinar_modelo(
 
     print(f"\n[{nome}] Iniciando treinamento...")
 
+    if usar_grid_search and params and GRID_N_JOBS > 1 and hasattr(modelo, "n_jobs"):
+        modelo = clone(modelo)
+        modelo.set_params(n_jobs=1)
+
     if usar_grid_search and params:
         cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=RANDOM_STATE)
         grid = GridSearchCV(
@@ -126,7 +137,7 @@ def treinar_modelo(
             param_grid=params,
             scoring="f1",
             cv=cv,
-            n_jobs=-1,
+            n_jobs=GRID_N_JOBS,
             verbose=1,
         )
         grid.fit(X_train, y_train)

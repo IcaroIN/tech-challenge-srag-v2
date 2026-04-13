@@ -14,6 +14,10 @@ Construir um modelo de Machine Learning para prever o desfecho clínico (cura ou
 
 Coloque o arquivo CSV em `data/raw/` antes de executar os notebooks.
 
+## Requisitos
+
+Use **Python 3.11 ou 3.12** (o mesmo do `Dockerfile`). Em versões muito novas (por exemplo 3.14), o `pip` costuma baixar código-fonte em vez de wheels para `numpy`, `pandas` e `matplotlib`, e a compilação local pode falhar mesmo com as versões fixadas em `requirements.txt`.
+
 ## Estrutura do Projeto
 
 ```
