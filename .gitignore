@@ -1,2 +1,18 @@
+# Dados
 *.csv
+
+# Ambiente virtual
 /venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Resultados gerados
+results/
