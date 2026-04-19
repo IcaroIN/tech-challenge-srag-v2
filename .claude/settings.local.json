@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import sys,json; [print\\(l\\) for l in sys.stdin if 'src' in l or 'import' in l]\")",
+      "Bash(git rm *)",
+      "Bash(touch /Users/arthuraugustopaulahardman/projetos/pos_fiap/fase1/tech_challenge_srag/.claude/worktrees/laughing-turing-7a706a/data/raw/.gitkeep /Users/arthuraugustopaulahardman/projetos/pos_fiap/fase1/tech_challenge_srag/.claire/worktrees/laughing-turing-7a706a/data/processed/.gitkeep)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'Limpar projeto: manter somente notebooks, docs e dados' --body ' *)",
+      "Bash(brew list *)"
+    ]
+  }
+}
