@@ -38,11 +38,21 @@ RANDOM_STATE = 42
 GRID_N_JOBS = int(os.environ.get("SRAG_GRID_N_JOBS", "1"))
 
 
-def definir_modelos() -> dict:
+def definir_modelos(scale_pos_weight: float = 1.0) -> dict:
     """
     Retorna um dicionário com os modelos e suas grades de hiperparâmetros para busca.
 
-    Estrutura:
+    Parâmetros
+    ----------
+    scale_pos_weight : float
+        Razão entre negativos e positivos no treino (n_cura / n_obito).
+        Passada ao XGBClassifier para compensar o desbalanceamento de classes,
+        equivalente ao class_weight='balanced' dos demais modelos.
+        Valor padrão 1.0 (sem balanceamento); calcule com:
+            scale_pos_weight = (y_train == 0).sum() / (y_train == 1).sum()
+
+    Estrutura de retorno
+    --------------------
       { nome: {"model": estimator, "params": param_grid} }
     """
     modelos = {
@@ -81,11 +91,13 @@ def definir_modelos() -> dict:
             },
         },
         "xgboost": {
+            # XGBClassifier não aceita class_weight; usa scale_pos_weight
+            # como mecanismo equivalente de balanceamento de classes.
             "model": XGBClassifier(
                 eval_metric="logloss",
                 random_state=RANDOM_STATE,
                 n_jobs=-1,
-                use_label_encoder=False,
+                scale_pos_weight=scale_pos_weight,
             ),
             "params": {
                 "n_estimators": [100, 300],
@@ -162,6 +174,9 @@ def treinar_todos_modelos(
     """
     Treina todos os modelos definidos em definir_modelos() e opcionalmente salva os artefatos.
 
+    Calcula automaticamente scale_pos_weight para o XGBoost a partir do y_train,
+    garantindo tratamento equivalente ao class_weight='balanced' dos demais modelos.
+
     Parâmetros
     ----------
     X_train, y_train — dados de treino
@@ -172,7 +187,12 @@ def treinar_todos_modelos(
     -------
     dict { nome_modelo: estimator_treinado }
     """
-    modelos_config = definir_modelos()
+    n_neg = (y_train == 0).sum()
+    n_pos = (y_train == 1).sum()
+    spw = n_neg / n_pos if n_pos > 0 else 1.0
+    print(f"Desbalanceamento — Cura: {n_neg:,} | Óbito: {n_pos:,} | scale_pos_weight XGB: {spw:.2f}")
+
+    modelos_config = definir_modelos(scale_pos_weight=spw)
     modelos_treinados = {}
 
     for nome, config in modelos_config.items():
