@@ -20,10 +20,10 @@ from pathlib import Path
 # Garante que src/ está no path mesmo rodando da raiz do projeto
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from src.load_data import carregar_dataset
-from src.preprocessing import executar_pipeline_preprocessamento
-from src.modeling import treinar_todos_modelos
-from src.evaluation import avaliar_todos_modelos
+from src.tabular.load_data import carregar_dataset
+from src.tabular.preprocessing import executar_pipeline_preprocessamento
+from src.tabular.modeling import treinar_todos_modelos
+from src.tabular.evaluation import avaliar_todos_modelos
 
 
 def parse_args() -> argparse.Namespace:

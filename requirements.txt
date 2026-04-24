@@ -11,3 +11,9 @@ joblib==1.4.2
 jupyter==1.0.0
 ipykernel==6.29.4
 python-docx==1.1.2
+
+# NOVOS (imagem)
+tensorflow==2.16.1
+opencv-python==4.10.0.84
+kagglehub==0.2.7
+Pillow==10.3.0

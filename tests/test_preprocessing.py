@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.preprocessing import (
+from src.tabular.preprocessing import (
     filtrar_registros_validos,
     criar_target_binario,
     selecionar_features,

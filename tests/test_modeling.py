@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.modeling import definir_modelos, treinar_modelo, treinar_todos_modelos
+from src.tabular.modeling import definir_modelos, treinar_modelo, treinar_todos_modelos
 
 
 # ---------------------------------------------------------------------------
