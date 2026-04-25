@@ -3,6 +3,9 @@
 
 # Ambiente virtual
 /venv/
+/venv312/
+/.venv/
+/.venv312/
 
 # Python
 __pycache__/
