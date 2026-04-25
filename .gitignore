@@ -14,5 +14,13 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Resultados gerados
-results/
+# Artefatos pesados gerados pelo pipeline (não versionar)
+results/models/*.pkl
+data/processed/*.parquet
+data/processed/*.pkl
+
+# Manter estrutura de diretórios e figuras no git
+!results/figures/.gitkeep
+!results/models/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep

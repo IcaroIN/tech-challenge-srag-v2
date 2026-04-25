@@ -1,54 +1,42 @@
-Tech Challenge Fase 1 — Classificação de SRAG (SIVEP-Gripe)
-Objetivo
+# Tech Challenge Fase 1 — Classificação de Desfecho Clínico em SRAG
 
-Construir um sistema de apoio à decisão clínica capaz de prever o desfecho de pacientes com Síndrome Respiratória Aguda Grave (SRAG), utilizando:
+**FIAP Pos-Tech — Machine Learning Engineering**
 
-Dados tabulares clínicos (SIVEP-Gripe)
-Validação complementar por imagens (radiografias torácicas)
+Modelo de classificação para prever o desfecho clínico (cura vs óbito) de pacientes hospitalizados com Síndrome Respiratória Aguda Grave (SRAG), usando dados do SIVEP-Gripe do Ministério da Saúde.
 
-O foco é compreender o comportamento de modelos de Machine Learning e Deep Learning aplicados à saúde, explorando tanto dados estruturados quanto não estruturados.
+---
 
-Dataset
-1. Dados Tabulares — SIVEP-Gripe
-Fonte: OpenDataSUS
-Arquivo: INFLUD24-26-06-2025.csv
-Registros: ~268 mil
-Variáveis: 194
+## Datasets
 
-Variável alvo:
+### 1. Dados Tabulares — SIVEP-Gripe
 
-EVOLUCAO
-1 = Cura
-2 = Óbito
+| Campo | Valor |
+|-------|-------|
+| Fonte | [OpenDataSUS — Ministério da Saúde](https://opendatasus.saude.gov.br/dataset/srag-2021-a-2024) |
+| Arquivo | `INFLUD24-26-06-2025.csv` |
+| Registros | ~268 mil |
+| Variáveis | 194 |
+| Variável alvo | `EVOLUCAO` → codificada como `OBITO` (0=Cura, 1=Óbito) |
 
-Transformação aplicada:
+**Coloque o arquivo em `data/raw/` antes de executar o pipeline.**
 
-0 = Cura
-1 = Óbito
+### 2. Dados de Imagem — Radiografias Torácicas
 
-Coloque o arquivo em:
+| Campo | Valor |
+|-------|-------|
+| Fonte | [COVID-19 Radiography Database — Kaggle](https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database) |
+| Download | Automático via `kagglehub` (requer `~/.kaggle/kaggle.json`) |
+| Classes | COVID, Normal, Lung\_Opacity, Viral Pneumonia |
 
-data/raw/
-2. Dados de Imagem — Radiografias Torácicas
-Fonte: COVID-19 Radiography Database (Kaggle)
-Download automático via kagglehub
+---
 
-Classes utilizadas:
+## Estrutura do Projeto
 
-COVID
-Normal
-Lung_Opacity
-Viral Pneumonia
-
-Observação:
-
-Nesta fase, o modelo de imagem é treinado do zero (sem transfer learning)
-Foi aplicada data augmentation para melhorar a generalização
-Estrutura do Projeto
-tech_challenge_srag/
+```
+tech-challenge-srag-v2/
 ├── data/
-│   ├── raw/
-│   └── processed/
+│   ├── raw/                    # CSV original (não versionado)
+│   └── processed/              # Splits parquet + artefatos pkl
 ├── notebooks/
 │   ├── 01_exploratory_data_analysis.ipynb
 │   ├── 02_preprocessing.ipynb
@@ -56,99 +44,140 @@ tech_challenge_srag/
 │   ├── 04_evaluation_interpretability.ipynb
 │   └── 05_image_validation.ipynb
 ├── src/
-│   ├── tabular/
+│   ├── tabular/                # Módulos do pipeline sklearn/XGBoost
 │   │   ├── load_data.py
 │   │   ├── preprocessing.py
 │   │   ├── modeling.py
 │   │   └── evaluation.py
-│   │
-│   └── image/
+│   └── image/                  # Módulos do pipeline TensorFlow/Keras
 │       ├── image_data.py
 │       ├── image_preprocessing.py
 │       ├── image_model.py
 │       └── image_evaluation.py
-│
-├── docs/
-│   └── documentacao_tecnica.docx
 ├── results/
-│   ├── figures/
-│   └── models/
+│   ├── figures/                # Gráficos gerados (confusion matrix, ROC, SHAP)
+│   └── models/                 # Modelos serializados .pkl
+├── tests/
+│   ├── test_preprocessing.py
+│   └── test_modeling.py
+├── docs/
+│   ├── relatorio_tecnico.md
+│   └── dicionario-de-dados-2019-a-2025.pdf
 ├── run_pipeline.py
 ├── requirements.txt
+├── Makefile
 └── Dockerfile
-Requisitos
+```
 
-Utilizar:
+---
 
-Python 3.11 ou 3.12
+## Requisitos
 
-Evitar versões muito recentes (ex: 3.14), pois podem causar falhas na instalação de dependências científicas.
+- **Python 3.11 ou 3.12** (evitar 3.13+ por incompatibilidade de wheels com numpy/pandas)
+- ~4 GB de RAM para o pipeline tabular completo
+- Credenciais do Kaggle (`~/.kaggle/kaggle.json`) para o notebook de imagens
 
-Instalação e Execução Local
-# Criar ambiente virtual
+---
+
+## Instalação e Execução Local
+
+```bash
+# 1. Criar e ativar ambiente virtual
 python -m venv venv
+source venv/bin/activate      # Linux/Mac
+# venv\Scripts\activate       # Windows
 
-# Ativar ambiente
-venv\Scripts\activate     # Windows
-source venv/bin/activate  # Linux/Mac
-
-# Instalar dependências
+# 2. Instalar dependências
 pip install -r requirements.txt
 
-# Adicionar dataset
-colocar INFLUD24-26-06-2025.csv em data/raw/
+# 3. Adicionar o dataset tabular
+cp /caminho/para/INFLUD24-26-06-2025.csv data/raw/
 
-# Executar pipeline
+# 4. Executar o pipeline completo
 python run_pipeline.py
 
-# Executar notebooks
+# 5. Rodar os testes
+pytest tests/ -v
+```
+
+### Opções do pipeline
+
+```bash
+python run_pipeline.py --no-grid    # Sem GridSearchCV (mais rápido)
+python run_pipeline.py --no-shap    # Sem SHAP (mais rápido)
+python run_pipeline.py --nrows 10000  # Subconjunto dos dados
+```
+
+### Notebooks interativos
+
+```bash
 jupyter notebook notebooks/
-Execução com Docker
+```
+
+---
+
+## Execução com Docker
+
+```bash
+# Build
 docker build -t tech-challenge-srag .
+
+# Executar (abre Jupyter na porta 8888)
 docker run -p 8888:8888 -v $(pwd)/data:/app/data tech-challenge-srag
-Fluxo dos Notebooks
-Notebook	Descrição
-01_exploratory_data_analysis	Análise exploratória dos dados
-02_preprocessing	Limpeza e preparação dos dados
-03_modeling	Treinamento dos modelos tabulares
-04_evaluation_interpretability	Avaliação e interpretabilidade (SHAP)
-05_image_validation	Classificação de imagens com CNN
-Modelos Utilizados
-Dados Tabulares
-Regressão Logística
-Árvore de Decisão
-Random Forest
-XGBoost
-Dados de Imagem
-CNN construída do zero (Keras)
-Data augmentation aplicado
-Métricas de Avaliação
-Tabular
-Accuracy
-Precision
-Recall
-F1-score
-ROC-AUC
-Imagem
-Accuracy
-Precision
-Recall
-F1-score
-Matriz de confusão
-Principais Observações Técnicas
-Modelos simples de CNN apresentaram dificuldade inicial de generalização
-Houve tendência de colapso para uma única classe em cenários com poucos dados
-A aplicação de data augmentation foi necessária para melhorar o desempenho
-O projeto demonstra a diferença de comportamento entre modelos tabulares e de visão computacional
-Possíveis Evoluções
-Implementação de modelo multimodal (imagem + dados clínicos)
-Uso de transfer learning (MobileNet, EfficientNet)
-Deploy como API
-Monitoramento de modelo (MLOps)
-Conclusão
+```
 
-O projeto demonstra, na prática, o desenvolvimento de um pipeline completo de Machine Learning aplicado à saúde, desde a análise exploratória até a validação com imagens médicas, evidenciando desafios reais como:
+Acesse: `http://localhost:8888`
 
-qualidade de dados
-generalização de modelos
-diferença entre abordagens tabulares e visuais
+---
+
+## Modelos Treinados
+
+### Dados Tabulares
+
+| Modelo | Tipo | Papel |
+|--------|------|-------|
+| Regressão Logística | Linear | Baseline interpretável |
+| Árvore de Decisão | Não-linear | Regras explícitas |
+| Random Forest | Ensemble (bagging) | Generalização robusta |
+| XGBoost | Ensemble (boosting) | Alta performance |
+
+Todos otimizados com `GridSearchCV` + `StratifiedKFold(5)`, métrica: **F1-score (Óbito)**.
+
+### Dados de Imagem
+
+- CNN construída do zero com Keras Sequential
+- `GlobalAveragePooling2D` para controle de parâmetros (~24k treináveis)
+- Data augmentation leve (rotação ≤10°, zoom ≤10%)
+
+---
+
+## Métricas de Avaliação
+
+| Métrica | Tabular | Imagem |
+|---------|---------|--------|
+| Accuracy | ✅ | ✅ |
+| Precision | ✅ | ✅ |
+| Recall | ✅ | ✅ |
+| F1-score | ✅ (métrica principal) | ✅ |
+| ROC-AUC | ✅ | — |
+| Matriz de confusão | ✅ | ✅ |
+| SHAP | ✅ | — |
+
+---
+
+## Makefile
+
+```bash
+make run    # Pipeline tabular completo
+make test   # pytest
+make lint   # ruff + mypy
+```
+
+---
+
+## Relatório Técnico
+
+Ver [`docs/relatorio_tecnico.md`](docs/relatorio_tecnico.md) para detalhamento de:
+- Estratégias de pré-processamento
+- Modelos usados e justificativas
+- Resultados e interpretação
